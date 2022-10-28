@@ -47,7 +47,55 @@ function loadTexture(path){
     })
 }
 
-async function createEnemies(ctx,canvas,enemy){
+class EventEmitter {
+    constructor(){
+        this.listeners = {};
+    }
+    on(message,listener){
+        if(!this.listeners[message]){
+            this.listeners[message]=[];
+        }
+        this.listeners[message].push(listener);
+    }
+
+    emit(message,payload = null){
+        if(this.listeners[message]){
+            this.listeners[message].forEach(l => {
+                l(message, payload)
+            });
+        }
+    }
+}
+
+window.addEventListener("keyup", (evt) => {
+   if (evt.key === "ArrowUp") {
+     eventEmitter.emit(Messages.KEY_EVENT_UP);
+   } else if (evt.key === "ArrowDown") {
+     eventEmitter.emit(Messages.KEY_EVENT_DOWN);
+   } else if (evt.key === "ArrowLeft") {
+     eventEmitter.emit(Messages.KEY_EVENT_LEFT);
+   } else if (evt.key === "ArrowRight") {
+     eventEmitter.emit(Messages.KEY_EVENT_RIGHT);
+   }
+ });
+
+
+const Messages = {
+  KEY_EVENT_UP: "KEY_EVENT_UP",
+  KEY_EVENT_DOWN: "KEY_EVENT_DOWN",
+  KEY_EVENT_LEFT: "KEY_EVENT_LEFT",
+  KEY_EVENT_RIGHT: "KEY_EVENT_RIGHT",
+};
+
+let heroImg, 
+    enemyImg, 
+    laserImg,
+    canvas, ctx, 
+    gameObjects = [], 
+    hero, 
+    eventEmitter = new EventEmitter();
+
+function createEnemies(){
     //TODO draw enemies
     const MONSTER_TOTAL = 5;
     const MONSTER_WIDTH = MONSTER_TOTAL * 98;
@@ -56,96 +104,64 @@ async function createEnemies(ctx,canvas,enemy){
 
    for (let x = START_X; x < STOP_X; x += 98) {
     for (let y = 0; y < 50 * 5; y += 50) { 
-        enemy.x = x;
-        enemy.y = y;
-        enemy.draw(ctx);
-    }
+      const enemy = new Enemy(x, y);
+      enemy.img = enemyImg;
+      gameObjects.push(enemy);
   }
+}
+}
+
+function createHero() {
+   hero = new Hero(canvas.width / 2 - 45,canvas.height - canvas.height / 4);
+  hero.img = heroImg;
+  gameObjects.push(hero);
+}
+
+function drawGameObjects(ctx) {
+
+  gameObjects.forEach( go => {
+    go.draw(ctx)
+  });
+}
+
+function initGame() {
+  gameObjects = [];
+  createEnemies();
+  createHero();
+
+
+  eventEmitter.on(Messages.KEY_EVENT_UP, () => {
+    hero.y -=5 ;
+    console.log('I am working')
+  })
+
+  eventEmitter.on(Messages.KEY_EVENT_DOWN, () => {
+    hero.y += 5;
+  });
+
+  eventEmitter.on(Messages.KEY_EVENT_LEFT, () => {
+    hero.x -= 5;
+  });
+
+  eventEmitter.on(Messages.KEY_EVENT_RIGHT, () => {
+    hero.x += 5;
+  });
 }
 
 window.onload = async()=>{
-    const canvas = document.getElementById('canvas');
-    console.log(canvas)
-    const ctx = canvas.getContext("2d");
+    
+  canvas = document.getElementById("canvas");
+  ctx = canvas.getContext("2d");
+  heroImg = await loadTexture("./assets/player.png");
+  enemyImg = await loadTexture("./assets/enemyShip.png");
+  laserImg = await loadTexture("./assets/laserRed.png");
+
+  initGame();
+  console.log(gameObjects)
+  let gameLoopId = setInterval(() => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "black";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    //initiate hero
-    const hero = new Hero((canvas.width/2) - 45,canvas.height - canvas.height / 4); 
-    hero.img = await loadTexture('./assets/player.png');
-    hero.height = hero.img.height;
-    hero.width = hero.img.width;
-    //draw hero on screen
-    hero.draw(ctx);
-
-    let enemy = new Enemy();
-    enemy.img = await loadTexture('./assets/enemyShip.png');
-    enemy.height = enemy.img.height;
-    enemy.width = enemy.img.width;
-   
-    createEnemies(ctx, canvas,enemy);
-
-
-//too much repitition in code ... fix that..
-//stop movemrnt of hero outside the canvas
-    let onKeyDown = function(e) {
-    console.log(e.keyCode, e.key);
-    e.preventDefault();
-    if(e.key==='ArrowUp'){
-         hero.y -= 50;
-
-        ctx.clearRect(0,0,canvas.width,canvas.height)
-        ctx.fillStyle = "black";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        
-        createEnemies(ctx, canvas,enemy);
-        hero.draw(ctx);
-    
-        console.log(hero.y)
-    }
-    if(e.key==='ArrowDown'){
-
-        hero.y += 50;
-
-        ctx.clearRect(0,0,canvas.width,canvas.height)
-        ctx.fillStyle = "black";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        
-        createEnemies(ctx, canvas,enemy);
-        hero.draw(ctx);
-    
-        console.log(hero.y)
-    }
-    if(e.key==='ArrowLeft'){
-        hero.x -= 50;
-
-        ctx.clearRect(0,0,canvas.width,canvas.height)
-        ctx.fillStyle = "black";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        
-        createEnemies(ctx, canvas,enemy);
-        hero.draw(ctx);
-    
-        console.log(hero.x)
-    }
-    if(e.key==='ArrowRight'){
-        hero.x += 50;
-
-        ctx.clearRect(0,0,canvas.width,canvas.height)
-        ctx.fillStyle = "black";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        
-        createEnemies(ctx, canvas,enemy);
-        hero.draw(ctx);
-    
-        console.log(hero.x)
-    }
-
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawGameObjects(ctx);
+  }, 100)
 }
-window.addEventListener('keydown', onKeyDown)
-}
-
-
-
-
-
