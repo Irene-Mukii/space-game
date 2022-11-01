@@ -26,6 +26,7 @@ class GameObject {
 class Hero extends GameObject {
     constructor(x,y){
         super(x,y)
+       
         this.speed = 0;
     }
 }
