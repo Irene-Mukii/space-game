@@ -25,8 +25,9 @@ class GameObject {
 
 class Hero extends GameObject {
     constructor(x,y){
-        super(x,y)
-       
+        super(x,y);
+        (this.width = 99), (this.height = 75);
+        this.type = 'Hero'
         this.speed = 0;
     }
 }
