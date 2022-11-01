@@ -28,7 +28,24 @@ class Hero extends GameObject {
         super(x,y);
         (this.width = 99), (this.height = 75);
         this.type = 'Hero'
-        this.speed = 0;
+        this.speed = {x:0, y:0};
+        this.cooldown = 0;
+    }
+    fire(){
+      gameObjects.push(new Laser(this.x + 45, this.y - 10));
+      this.cooldown = 500;
+
+      let id = setInterval(()=>{
+        if(this.cooldown>0){
+          this.cooldown -= 100;
+        }else {
+          clearInterval(id)
+        }
+      },200)
+    }
+
+    canFire(){
+      return this.cooldown === 0;
     }
 }
 
@@ -258,7 +275,7 @@ window.onload = async()=>{
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
+    updateGameObjects();
     drawGameObjects(ctx);
   }, 100)
 }
