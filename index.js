@@ -95,28 +95,6 @@ class EventEmitter {
     }
 }
 
-class Cooldown {
-  constructor(time){
-    this.cool = false;
-    setTimeout(()=>{
-      this.cool = true;
-    },time)
-  }
-}
-
-class Weapon {
-  constructor(){
-  }
-  fire(){
-    if (!this.cooldown || this.cooldown.cool){
-      //produce a laser
-      this.cooldown = new Cooldown(500);
-    }else {
-      //do mothing - it hasnt cooled down yet
-    }
-  }
-}
-
 class Laser extends GameObject {
   constructor(x,y){
     super(x,y);
@@ -130,11 +108,10 @@ class Laser extends GameObject {
         this.dead = true;
         clearInterval(id)
       }
-    },100)
+    },100 )
 
   }
 }
-
 
 window.addEventListener("keyup", (evt) => {
    if (evt.key === "ArrowUp") {
@@ -220,7 +197,6 @@ function updateGameObjects(){
       }
     });
   });
-
   //game objects remaining for rendering should only be the ones not dead
   gameObjects = gameObjects.filter(go => !go.dead);
 }
