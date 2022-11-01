@@ -189,6 +189,25 @@ function intersectRect (r1,r2){
         r2.bottom < r1.top);
 }
 
+function updateGameObjects(){
+  const enemies = gameObjects.filter(go => go.type === 'Enemy');
+  const lasers = gameObjects.filter(go => go.type === 'Laser');
+  //laster hits something 
+  lasers.forEach((l)=>{
+    enemies.forEach((m)=>{
+      if(intersectRect(l.rectFromGameObject(),m.rectFromGameObject())){
+        eventEmitter.emit(Messages.COLLISION_ENEMY_LASER, {
+          first: l,
+          second: m,
+        });
+      }
+    });
+  });
+
+  //game objects remaining for rendering should only be the ones not dead
+  gameObjects = gameObjects.filter(go => !go.dead);
+}
+
 //initializing game
 function initGame() {
   gameObjects = [];
