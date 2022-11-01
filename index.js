@@ -192,11 +192,16 @@ function initGame() {
   eventEmitter.on(Messages.KEY_EVENT_RIGHT, () => {
     hero.x += 5;
   });
-  
+
   eventEmitter.on(Messages.KEY_EVENT_SPACE, ()=>{
     if(hero.canFire()){
       hero.fire();
     }
+  });
+
+  eventEmitter.on(Messages.COLLISION_ENEMY_LASER, (_,{first,second})=>{
+    first.dead = true;
+    second.dead = true;
   });
 }
 
