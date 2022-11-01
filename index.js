@@ -9,6 +9,15 @@ class GameObject {
         this.img = undefined;
     }
 
+    rectFromGameObject(){
+        return {
+            top: this.y,
+            left: this.x,
+            bottom: this.y + this.height,
+            right: this.x + this.width
+        }
+    }
+
     draw(ctx){
         ctx.drawImage(this.img, this.x, this.y, this.width, this.height)
     }
@@ -67,6 +76,29 @@ class EventEmitter {
     }
 }
 
+class Cooldown {
+  constructor(time){
+    this.cool = false;
+    setTimeout(()=>{
+      this.cool = true;
+    },time)
+  }
+}
+
+class Weapon {
+  constructor(){
+  }
+  fire(){
+    if (!this.cooldown || this.cooldown.cool){
+      //produce a laser
+      this.cooldown = new Cooldown(500);
+    }else {
+      //do mothing - it hasnt cooled down yet
+    }
+  }
+}
+
+
 window.addEventListener("keyup", (evt) => {
    if (evt.key === "ArrowUp") {
      eventEmitter.emit(Messages.KEY_EVENT_UP);
@@ -76,17 +108,23 @@ window.addEventListener("keyup", (evt) => {
      eventEmitter.emit(Messages.KEY_EVENT_LEFT);
    } else if (evt.key === "ArrowRight") {
      eventEmitter.emit(Messages.KEY_EVENT_RIGHT);
+   } else if (evt.keyCode === 32 ){
+    eventEmitter.emit(Messages.KEY_EVENT_SPACE);
    }
  });
 
-
+//messages to be emitted upon key events
 const Messages = {
   KEY_EVENT_UP: "KEY_EVENT_UP",
   KEY_EVENT_DOWN: "KEY_EVENT_DOWN",
   KEY_EVENT_LEFT: "KEY_EVENT_LEFT",
   KEY_EVENT_RIGHT: "KEY_EVENT_RIGHT",
+  KEY_EVENT_SPACE: "KEY_EVENT_SPACE",
+  COLLISION_ENEMY_LASER: "COLLISION_ENEMY_LASER",
+  COLLISION_ENEMY_HERO: "COLLISION_ENEMY_HERO"
 };
 
+//declaring global variables
 let heroImg, 
     enemyImg, 
     laserImg,
@@ -96,7 +134,6 @@ let heroImg,
     eventEmitter = new EventEmitter();
 
 function createEnemies(){
-    //TODO draw enemies
     const MONSTER_TOTAL = 5;
     const MONSTER_WIDTH = MONSTER_TOTAL * 98;
     const START_X = (canvas.width - MONSTER_WIDTH)/2;
@@ -110,13 +147,13 @@ function createEnemies(){
   }
 }
 }
-
+//function to create hero
 function createHero() {
    hero = new Hero(canvas.width / 2 - 45,canvas.height - canvas.height / 4);
   hero.img = heroImg;
   gameObjects.push(hero);
 }
-
+//function to draw all game objects
 function drawGameObjects(ctx) {
 
   gameObjects.forEach( go => {
@@ -124,12 +161,21 @@ function drawGameObjects(ctx) {
   });
 }
 
+//comparison function
+function intersectRect (r1,r2){
+    return !(r2.left> r1.right ||
+        r2.right < r1.left ||
+        r2.top > r1.bottom ||
+        r2.bottom < r1.top);
+}
+
+//initializing game
 function initGame() {
   gameObjects = [];
   createEnemies();
   createHero();
 
-
+//listening for hero mmovement events that might be fired
   eventEmitter.on(Messages.KEY_EVENT_UP, () => {
     hero.y -=5 ;
     console.log('I am working')
@@ -145,6 +191,12 @@ function initGame() {
 
   eventEmitter.on(Messages.KEY_EVENT_RIGHT, () => {
     hero.x += 5;
+  });
+  
+  eventEmitter.on(Messages.KEY_EVENT_SPACE, ()=>{
+    if(hero.canFire()){
+      hero.fire();
+    }
   });
 }
 
@@ -162,6 +214,7 @@ window.onload = async()=>{
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
     drawGameObjects(ctx);
   }, 100)
 }
