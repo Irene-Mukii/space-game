@@ -41,7 +41,7 @@ class Hero extends GameObject {
         }else {
           clearInterval(id)
         }
-      },200)
+      },20)
     }
 
     canFire(){
@@ -61,7 +61,7 @@ class Enemy extends GameObject{
                 console.log('Stopped at ', this.y)
                 clearInterval(id)            
             }
-        }, 3000);
+        }, 3000 );
     }
 }
 
@@ -103,12 +103,13 @@ class Laser extends GameObject {
     this.img = laserImg;
     let id = setInterval(()=>{
       if(this.y>0){
-        this.y = -15;
+        this.y -= 5  ;
+        console.log(this.y)
       }else{
         this.dead = true;
         clearInterval(id)
       }
-    },100 )
+    },100)
 
   }
 }
@@ -161,12 +162,14 @@ function createEnemies(){
   }
 }
 }
+
 //function to create hero
 function createHero() {
    hero = new Hero(canvas.width / 2 - 45,canvas.height - canvas.height / 4);
   hero.img = heroImg;
   gameObjects.push(hero);
 }
+
 //function to draw all game objects
 function drawGameObjects(ctx) {
 
@@ -177,10 +180,12 @@ function drawGameObjects(ctx) {
 
 //comparison function
 function intersectRect (r1,r2){
-    return !(r2.left> r1.right ||
-        r2.right < r1.left ||
-        r2.top > r1.bottom ||
-        r2.bottom < r1.top);
+    return !(
+      r2.left > r1.right ||
+      r2.right < r1.left ||
+      r2.top > r1.bottom ||
+      r2.bottom < r1.top
+    );
 }
 
 function updateGameObjects(){
@@ -252,6 +257,7 @@ window.onload = async()=>{
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     updateGameObjects();
+    //console.log(gameObjects);
     drawGameObjects(ctx);
-  }, 100)
+  }, 10)
 }
