@@ -49,6 +49,17 @@ class Hero extends GameObject {
     canFire(){
       return this.cooldown === 0;
     }
+
+    decrementLife(){
+      this.life--;
+      if(this.life === 0 ){
+        this.dead = true
+      }
+    }
+
+    incrementPoints(){
+      this.points += 100;
+    }
 }
 
 class Enemy extends GameObject{
@@ -198,19 +209,22 @@ function updateGameObjects(){
   const lasers = gameObjects.filter(go => go.type === 'Laser');
   //laster hits something 
   lasers.forEach((l)=>{
-    enemies.forEach((enemy)=>{
-      if(intersectRect(l.rectFromGameObject(),enemy.rectFromGameObject())){
+    enemies.forEach((m)=>{
+      if(intersectRect(l.rectFromGameObject(),m.rectFromGameObject())){
         eventEmitter.emit(Messages.COLLISION_ENEMY_LASER, {
           first: l,
           second: m,
         });
       }
-      const heroRect  = hero.rectFromGameObject();
-      if(intersectRect(heroRect,enemy.rectFromGameObject())){
-        eventEmitter.emit(Messages.COLLISION_ENEMY_HERO, {enemy});
-      }
+      
     });
   });
+  enemies.forEach((enemy)=>{
+    const heroRect  = hero.rectFromGameObject();
+      if(intersectRect(heroRect,enemy.rectFromGameObject())){
+        eventEmitter.emit(Messages.COLLISION_ENEMY_HERO, {enemy}); 
+      }
+  })
   //game objects remaining for rendering should only be the ones not dead
   gameObjects = gameObjects.filter(go => !go.dead);
 }
@@ -218,6 +232,7 @@ function updateGameObjects(){
 function drawlife(){
   //TODO 35,27
   const START_POS = canvas.width - 180;
+  console.log('hero lives  are '+ hero.life )
   for (let i=0; i<hero.life; i++){
     ctx.drawImage(
       lifeImg,
@@ -268,10 +283,17 @@ function initGame() {
     }
   });
 
-  eventEmitter.on(Messages.COLLISION_ENEMY_LASER, (_,{first,second})=>{
+  eventEmitter.on(Messages.COLLISION_ENEMY_LASER, (_,{first,second})=>{ 
     first.dead = true;
     second.dead = true;
+    hero.incrementPoints();
   });
+
+  eventEmitter.on(Messages.COLLISION_ENEMY_HERO, (_, {enemy}) => {
+    console.log('danger')
+    enemy.dead = true;
+    hero.decrementLife();
+  })
 }
 
 window.onload = async()=>{
@@ -281,7 +303,7 @@ window.onload = async()=>{
   heroImg = await loadTexture("./assets/player.png");
   enemyImg = await loadTexture("./assets/enemyShip.png");
   laserImg = await loadTexture("./assets/laserRed.png");
-  lifeImg = await loadTexture('./assets/player.png')
+  lifeImg = await loadTexture('./assets/life.png')
 
   initGame();
   console.log(gameObjects)
